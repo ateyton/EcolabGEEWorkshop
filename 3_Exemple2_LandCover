@@ -1,0 +1,126 @@
+// EXEMPLE 3: CLASSIFICATION DE L'OCCUPATION DES SOLS - COPERNICUS
+// CALCUL DES SUPERFICIES ET DU POURCENTAGE DES ZONES URBAINES ET CONSTRUITES
+
+////////////////////////////////////
+//Partie 1
+////////////////////////////////////
+
+// Charger une collection d'entités de la France
+var france = ee.FeatureCollection('USDOS/LSIB_SIMPLE/2017')
+  .filter(ee.Filter.eq('country_na', 'France'));
+
+// Charger le jeu de données sur la couverture terrestre COPERNICUS.
+var dataset = ee.Image('COPERNICUS/Landcover/100m/Proba-V-C3/Global/2019')
+.select('discrete_classification');
+
+// Clipper les classifications
+var dataset_france = dataset.clip(france);
+
+// Centre la carte sur la France
+Map.setCenter(2.56, 46.40,5);
+
+Map.addLayer(dataset_france, {}, 'Land Cover');
+
+// Création d'une légende personnalisée
+var legend = ui.Panel({
+  style: {
+    position: 'bottom-right',  // Position de la légende en bas à droite
+    padding: '4px',           // Marge intérieure de la légende
+    width: '200px'            // Largeur de la légende
+  }
+});
+
+// Création du titre de la légende
+var legendTitle = ui.Label({
+  value: 'Classification de la couverture terrestre',  // Valeur du titre de la légende
+  style: {
+    fontWeight: 'bold',    // Poids de la police en gras
+    fontSize: '14px',      // Taille de la police
+    margin: '0 0 4px 0',   // Marge du titre
+    padding: '0'           // Marge intérieure du titre
+  }
+});
+
+// Ajout du titre de la légende au panneau
+legend.add(legendTitle);
+
+// Création et ajout des blocs de couleur et des étiquettes correspondantes à la légende
+var palette = ['282828', 'ffbb22', 'ffff4c', 'f096ff', 'fa0000', 'b4b4b4', 'f0f0f0', 
+'0032c8', '0096a0', 'fae6a0', '58481f','009900','70663e','00cc00','4e751f','007800',
+'666000','8db400','8d7400','a0dc00','929900','648c00','000080'];
+
+var names = ['Pas de données', 'Arbustes', 'Végétation herbacée',
+'Végétation cultivée et gérée', 'Zone urbaine / Construite', 'Végétation dénudée / clairsemée',
+'Neige et glace', 'Plans deau permanents', 'Zone humide herbacée', 'Mousse et lichen',
+'Forêt fermée à feuilles persistantes, à aiguilles persistantes', 
+'Forêt fermée à feuilles persistantes, à feuilles larges persistantes',
+'Forêt fermée à feuilles caduques, à aiguilles caduques', 
+'Forêt fermée à feuilles caduques, à feuilles larges caduques',
+'Forêt fermée mixte', 'Forêt fermée ne correspondant à aucune autre définition',
+'Forêt ouverte à aiguilles persistantes', 'Forêt ouverte à feuilles larges persistantes',
+'Forêt ouverte à aiguilles caduques', 'Forêt ouverte à feuilles larges caduques',
+'Forêt ouverte mixte', 'Forêt ouverte ne correspondant à aucune autre définition',
+'Océans, mers'];
+
+for (var i = 0; i < names.length; i++) {
+  var colorBox = ui.Label({
+    style: {
+      backgroundColor: '#' + palette[i],  // Couleur de fond du bloc de couleur
+      padding: '2px',                     // Marge intérieure du bloc de couleur
+      margin: '0 0 2px 0',                // Marge du bloc de couleur
+      width: '8px',                      // Largeur du bloc de couleur
+      height: '8px'                      // Hauteur du bloc de couleur
+    }
+  });
+
+  var nameLabel = ui.Label({
+    value: names[i],                      // Valeur de l'étiquette
+    style: {
+      margin: '0 0 2px 6px',              // Marge de l'étiquette
+      fontSize: '8px'                    // Taille de la police de l'étiquette
+    }
+  });
+
+  legend.add(colorBox);                   // Ajout du bloc de couleur à la légende
+  legend.add(nameLabel);                  // Ajout de l'étiquette à la légende
+}
+
+// Ajout de la légende à la carte
+Map.add(legend);
+
+////////////////////////////////////
+//Partie 2
+////////////////////////////////////
+
+// Charger le jeu de données sur la couverture terrestre et le filtrer pour inclure uniquement 
+//la classe de couverture des zones urbaines
+var dataset = ee.Image('COPERNICUS/Landcover/100m/Proba-V-C3/Global/2019');
+var urban_cover = dataset.select('discrete_classification').eq(50);
+
+// Clipper le jeu de données à l'étendue de la France
+var urban_cover_france = urban_cover.clipToCollection(france);
+
+// Calculer la superficie (km2) de la couverture urbaine en France en multipliant 
+//l'image binaire par la superficie des pixels et en divisant par 1e6
+var urban_cover_area = urban_cover_france.multiply(ee.Image.pixelArea()).divide(1e6);
+
+// Additionner la superficie des pixels de la couverture urbaine pour obtenir 
+//la superficie totale en kilomètres carrés
+var total_urban_cover_area = urban_cover_area.reduceRegion({
+  reducer: ee.Reducer.sum(),
+  geometry: france,
+  scale: 100,
+  maxPixels: 1e13
+}).get('discrete_classification');
+
+// Calculer la superficie totale de la France en kilomètres carrés
+var france_area = ee.Number(france.geometry().area()).divide(1e6);
+
+// Diviser la superficie de la couverture urbaine par la superficie totale de la France 
+//et multiplier par 100 pour obtenir le pourcentage de couverture urbaine
+var percent_urban_cover = ee.Number(total_urban_cover_area).divide(france_area).multiply(100);
+
+// Afficher le résultat
+print('Kilomètres carrés de couverture urbaine en France:', total_urban_cover_area);
+print('Kilomètres carrés de superficie en France:', france_area);
+print('Pourcentage de couverture urbaine en France:', percent_urban_cover);
