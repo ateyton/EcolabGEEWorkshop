@@ -1,0 +1,88 @@
+//EXEMPLE 1: Sentinel-2 & NDVI
+//EXERCICE D. CALCUL DU NDVI ET CRÉATION D'UNE SÉRIE TEMPORELLE
+
+
+// Chargement de la collection des zones IRIS de Paris
+var iris = ee.FeatureCollection("users/ateyton/Paris_IRIS1");
+
+// Filtre pour obtenir la zone spécifique du "20e Arrondissement" de Paris
+var target_values = ee.Filter.inList('NOM_COM', ['Paris 20e Arrondissement']);
+var geometry = iris.filter(target_values);
+
+// Définition du centre de la carte sur Paris
+Map.setCenter(2.403535522565887, 48.86252443660346,13);
+
+// Définition de la collection des images de Sentinel-2 en 2018
+var collection2018 = ee.ImageCollection("COPERNICUS/S2_SR")
+  .filterDate('2018-06-01', '2018-08-31')
+  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE',20));
+
+// Définition de la collection des images de Sentinel-2 en 2022
+var collection2022 = ee.ImageCollection("COPERNICUS/S2_SR")
+  .filterDate('2022-06-01', '2022-08-31')
+  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE',20));
+
+// Fonction pour calculer le NDVI
+function calculateNDVI(image) {
+  var ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI');
+  return image.addBands(ndvi);
+}
+
+// Application de la fonction de calcul du NDVI sur la collection d'images
+var ndviCollection2018 = collection2018.map(calculateNDVI);
+var ndviCollection2022 = collection2022.map(calculateNDVI);
+
+// Création du graphique de série temporelle
+var chart2018= ui.Chart.image.seriesByRegion({
+  imageCollection: ndviCollection2018,
+  regions: geometry,
+  reducer: ee.Reducer.mean(),
+  band: 'NDVI',
+  scale: 10,
+  seriesProperty: 'CODE_IRIS'
+});
+print(chart2018);
+
+var chart2022= ui.Chart.image.seriesByRegion({
+  imageCollection: ndviCollection2022,
+  regions: geometry,
+  reducer: ee.Reducer.mean(),
+  band: 'NDVI',
+  scale: 10,
+  seriesProperty: 'CODE_IRIS'
+});
+print(chart2022);
+
+//Calculer l'image moyenne de la collection d'images NDVI.
+var ndviImage2018 = ndviCollection2018.mean();
+var ndviImage2022 = ndviCollection2022.mean();
+
+// Clipper l'image NDVI à la géométrie spécifiée
+var ndviImage_clip2018 = ndviImage2018.clip(geometry);
+var ndviImage_clip2022 = ndviImage2022.clip(geometry);
+
+// Ajouter l'image NDVI clipée à la carte
+Map.addLayer(ndviImage_clip2018, {
+  'bands':['NDVI'],
+  min: 0.0,
+  max: 1.0,
+  palette: [
+    'FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901',
+    '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01',
+    '012E01', '011D01', '011301'
+  ],
+},
+  'Average NDVI, 2018');
+  
+Map.addLayer(ndviImage_clip2022, {
+  'bands':['NDVI'],
+  min: 0.0,
+  max: 1.0,
+  palette: [
+    'FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718', '74A901',
+    '66A000', '529400', '3E8601', '207401', '056201', '004C00', '023B01',
+    '012E01', '011D01', '011301'
+  ],
+},
+  'Average NDVI, 2022');
+  
