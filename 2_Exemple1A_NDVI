@@ -1,0 +1,34 @@
+//EXEMPLE 1: Sentinel-2 ET NDVI
+//EXERCICE A. AFFICHER UNE CARTE D'UNE COLLECTION D'IMAGES
+
+//Crée une variable 'dataset' et lui assigne la collection d'images Sentinel-2 du Catalogue de données de Google Earth Engine. 
+//.filterDate('2022-01-01', '2022-12-31') filtre les images de la collection pour inclure uniquement celles de l'année 2022.
+var dataset = ee.ImageCollection("COPERNICUS/S2_SR")
+    .filterDate('2022-01-01', '2022-12-31')
+    // Applique un filtre basé sur le pourcentage de couverture nuageuse
+    //Cela élimine les images ayant plus de 20 % de leurs pixels classés comme nuageux.
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE',20));
+
+//Affiche les informations sur la première image de la collection dans la console.
+print(dataset.first());
+
+//Crée une variable trueColor432 et lui assigne un sous-ensemble du jeu de données. 
+//La méthode .select() choisit les bandes Sentinel-2 correspondant aux longueurs d'onde rouge, verte et bleue, 
+//respectivement (bandes 4, 3 et 2). 
+//Ces bandes sont utilisées pour créer la composition en couleurs réelles.
+var trueColor432 = dataset.select(['B4', 'B3', 'B2']);
+
+//Crée une variable trueColor432Vis et lui assigne un objet de paramètres de visualisation. 
+//L'objet spécifie les valeurs minimale et maximale de l'image, 
+//qui sont utilisées pour ajuster le contraste de l'image lors de son affichage.
+var trueColor432Vis = {
+  min: 0.0,
+  max: 3000,
+};
+
+//Définit le centre de l'affichage de la carte à une longitude de 2.49, une latitude de 46.64 et un niveau de zoom de .
+Map.setCenter(2.49, 46.64, 5);
+
+//Ajoute la couche d'image trueColor432 à la carte avec les paramètres de visualisation spécifiés dans trueColor432Vis. 
+//La couche est étiquetée 'Couleurs réelles (432)' dans la légende de la carte.
+Map.addLayer(trueColor432, trueColor432Vis, 'Couleurs réelles (432)');
