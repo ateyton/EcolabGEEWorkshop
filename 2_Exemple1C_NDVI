@@ -1,0 +1,16 @@
+//EXEMPLE 1: Sentinel-2 & NDVI
+//EXERCICE C. RÉDUCTEURS - Médian
+
+// Définissez une collection d'images Earth Engine contenant les données Sentinel-2 
+// de l'année 2022, et calculez la valeur médiane de toutes les images de la collection
+var median_dataset = ee.ImageCollection("COPERNICUS/S2_SR")
+    .filterDate('2022-01-01', '2022-12-31')
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE',20))
+    .median();
+
+// Centrez la vue de la carte sur un emplacement et un niveau de zoom
+Map.setCenter(2.49, 46.64, 6);
+
+// Ajoutez la collection médiane Sentinel-2 en tant que couche à la carte avec 
+//les bandes rouge, verte et bleue affichées, et une valeur maximale de 0.4
+Map.addLayer(median_dataset,{'bands':['B4','B3','B2'], max: 3000},'Sentinel-2 2022- Médian');
