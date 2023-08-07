@@ -1,0 +1,128 @@
+///////////////////////////////////////////////////////////////////////////
+//Webinaire – L’utilisation des données satellitaires
+//3 Juillet, 2023
+///////////////////////////////////////////////////////////////////////////
+
+//#1: TUTORIEL JAVASCRIPT 
+
+//#1A INTRODUCTION À JAVASCRIPT
+//PREMIÈRE LIGNE DE CODE :
+//Affichage de Hello World !
+print('Hello World!');
+
+
+//CHAÎNES DE CARACTÈRES
+// Utilisez des guillemets simples (ou doubles) pour créer une chaîne de caractères.
+var greetString = 'Bonjour!';
+// Utilisez des parenthèses pour passer des arguments aux fonctions.
+print(greetString);
+
+
+//NOMBRES
+// Stockez un nombre dans une variable.
+var number = 42;
+print('La réponse est :', number);
+
+
+//LISTES
+// Utilisez des crochets [] pour créer une liste.
+var listOfNumbers = [0, 1, 1, 2, 3, 5];
+print('Liste de nombres :', listOfNumbers);
+
+// Créez une liste de chaînes de caractères.
+var listOfStrings = ['a', 'b', 'c', 'd'];
+print('Liste de chaînes de caractères:', listOfStrings);
+
+// Créez une liste mixte.
+var listofBoth = ['a', 2, 'c', 5];
+print('Liste mixte:', listofBoth);
+
+
+//DICTIONNAIRE
+// Utilisez des accolades {} pour créer un dictionnaire de paires clé:valeur.
+var objet = {
+  str: 'bar',
+  num: 13,
+  stuff: ['this', 'that', 'the other thing']
+};
+print('Dictionnaire:', objet);
+// Accédez aux éléments du dictionnaire en utilisant des crochets.
+print('Affichage de num:', objet.num);
+// Accédez aux éléments du dictionnaire en utilisant la notation pointée.
+print('Affichage de stuff:', objet.stuff);
+
+
+//FONCTIONS
+//Commenter un groupe de lignes entier : /* */
+/*
+var myFunction = function(parameter1, parameter2, parameter3) {
+  statement;
+  statement;
+  statement;
+  return statement;
+};
+*/
+
+// La fonction 'reflect' prend un seul paramètre : élément.
+var reflect = function(element) {
+  // Renvoie l'argument.
+  return element;
+};
+print('Bonne journée', reflect('À vous aussi !'));
+
+//////////////////////////////////////////////////
+//#1B CONTENEUR EARTH ENGINE
+//////////////////////////////////////////////////
+
+//EE CHAÎNES DE CARACTÈRES
+// Définissez une chaîne de caractères, puis placez-la dans un conteneur EE.
+var aString = 'To the cloud!';
+var eeString = ee.String(aString);
+print('Where to?', eeString);
+
+
+//EE NOMBRES
+// Définissez un nombre qui existe sur le serveur.
+var serverNumber = ee.Number(Math.E);
+print('e=', serverNumber);
+
+
+//EE LISTES
+// Créez une séquence de manière complexe.
+var eeList = ee.List([1, 2, 3, 4, 5]);
+// Créez une séquence de manière simple !
+var sequence = ee.List.sequence(1, 5);
+print('Sequence:', sequence);
+
+
+//EE DICTIONNAIRE
+// Créez un dictionnaire sur le serveur.
+var dictionary = ee.Dictionary({
+  e: Math.E,
+  pi: Math.PI,
+  phi: (1 + Math.sqrt(5)) / 2
+});
+
+// Obtenez certaines valeurs du dictionnaire.
+print('Euler:', dictionary.get('e'));
+print('Pi:', dictionary.get('pi'));
+print('Golden ratio:', dictionary.get('phi'));
+
+// Obtenez toutes les valeurs du dictionnaire.
+print('Keys: ', dictionary.keys());
+
+
+//DATES EE
+// Définissez une date dans Earth Engine.
+var date = ee.Date('2015-12-31');
+print('Date:', date);
+
+// Obtenez l'heure actuelle en utilisant la méthode JavaScript Date.now().
+var now = Date.now();
+print('Milliseconds depuis le 1er janvier 1970', now);
+
+// Initialisez un objet ee.Date.
+var eeNow = ee.Date(now);
+print('Now:', eeNow);
+
+
