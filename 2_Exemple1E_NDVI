@@ -1,0 +1,56 @@
+//EXEMPLE 1: Sentinel-2 & NDVI
+//EXERCICE E. RÉDUCTION DES RÉGIONS ET EXPORTATION DES FICHIERS
+
+//Chargement de la collection d'entités représentant les départements de la France.
+var departements = ee.FeatureCollection("users/ateyton/Departements_France");
+
+//Centrage de la carte sur la France
+Map.setCenter(2.56, 46.40,5);
+
+//Récupération des images Sentinel-2 pour la plage de dates spécifiée (du 01-01-2021 au 31-12-2022).
+var s2=ee.ImageCollection("COPERNICUS/S2_SR")
+  .filterDate('2022-01-01','2022-12-31')
+  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE',20)); 
+
+//Définit une fonction (addNDVI) pour calculer l'indice de végétation par différence normalisée (NDVI) 
+//à partir des bandes NIR (proche infrarouge) et RED (rouge) de chaque image.
+var addNDVI = function (image){
+var NDVIPerImage = image.expression(
+  '(NIR - RED) / (NIR + RED )', {
+    'NIR': image.select('B8'),
+    'RED': image.select('B4'),
+  }).rename('NDVI');
+return image.addBands(NDVIPerImage);
+};
+
+//Applique la fonction addNDVI à la collection Landsat 8 pour ajouter la bande NDVI à chaque image.
+var imageWithNDVI = s2.map(addNDVI);
+
+//Calcule la valeur maximale de NDVI pour l'ensemble de la collection Sentinel-2 (2022).
+var maxndvi = imageWithNDVI.select('NDVI').max();
+
+//Recadre l'image NDVI à l'étendue des départements de la France.
+var clippedNDVI = maxndvi.clip(departements); 
+
+//Ajoute la couche NDVI recadrée à la carte.
+Map.addLayer(clippedNDVI,
+{ 
+  'bands': 'NDVI',
+  'palette': '000000, 00FF00',
+});
+
+//Réduit l'image NDVI recadrée pour obtenir la valeur moyenne du NDVI pour chaque département.
+var departements_max = maxndvi.reduceRegions(
+{
+       'reducer': ee.Reducer.mean(),
+       'scale':10,
+       'collection': departements,
+       tileScale: 10
+});
+
+//Exporte la table contenant les valeurs moyennes du NDVI pour chaque département vers Google Drive.
+Export.table.toDrive({
+  'collection':departements_max,
+    description: 'Max_NDVI_Departement_Table',
+  });
+
